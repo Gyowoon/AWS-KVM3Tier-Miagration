@@ -1,0 +1,12 @@
+[project]
+name = "aws-ansible"
+version = "0.1.0"
+description = "Ansible Automated AWS PJ with uv Pakcage Manager"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible>=2.10",
+]
+
+
+[tool.uv]
+environments = ["platform_system != 'Windows'"]

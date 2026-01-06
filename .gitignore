@@ -87,3 +87,6 @@ ehthumbs.db
 #---------------------------------------
 *.log
 logs/
+#--- etc 
+.terraform.lock.hcl
+tfplan
