@@ -47,20 +47,19 @@ KVM 기반 3-Tier 웹 애플리케이션을 AWS로 마이그레이션하고, Ter
 ## 디렉토리 구조
 
 ```
-aws-3tier-iac/
-├── terraform/
-│   ├── main.tf              # Provider, Backend 설정
-│   ├── variables.tf         # 입력 변수 정의
-│   ├── outputs.tf           # 출력 값 정의
-│   ├── terraform.tfvars     # 변수 값 (Git 제외)
-│   ├── vpc.tf               # VPC, Subnet, IGW, NAT, Route Table
-│   ├── security-groups.tf   # Security Groups
-│   ├── ec2.tf               # EC2 Instances
-│   ├── alb.tf               # Application Load Balancers
-│   └── rds.tf               # RDS PostgreSQL
-├── ansible/                 # (Phase 2.2에서 구성)
-├── .gitignore
-└── README.md
+terraform/
+  ├── main.tf              # Provider, Backend 설정
+  ├── variables.tf         # 입력 변수 정의
+  ├── outputs.tf           # 출력 값 정의
+  ├── terraform.tfvars     # 변수 값 (Git 제외)
+  ├── vpc.tf               # VPC, Subnet, IGW, NAT, Route Table
+  ├── security-groups.tf   # Security Groups
+  ├── ec2.tf               # EC2 Instances
+  ├── alb.tf               # Application Load Balancers
+  ├── rds.tf               # RDS PostgreSQL
+  ├── monitoring.tf        # SNS, CloudWatch 설정 
+  ├── .gitignore
+  └── README.md
 ```
 
 ## 사전 요구사항
