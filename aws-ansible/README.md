@@ -60,6 +60,7 @@ aws-3tier-iac/
 │   └── rds.tf               # RDS PostgreSQL
 ├── ansible/
 │   ├── ansible.cfg          # Ansible 설정
+│   ├── site.yml         # 전체 실행
 │   ├── inventory/
 │   │   └── aws_hosts.ini    # 호스트 인벤토리
 │   ├── group_vars/
@@ -71,11 +72,11 @@ aws-3tier-iac/
 │   │   ├── nginx/           # Nginx 설치/설정
 │   │   └── wildfly/         # WildFly 설치/설정
 │   └── playbooks/
-│       ├── site.yml         # 전체 실행
 │       ├── web.yml          # Web만 실행
 │       └── app.yml          # App만 실행
 ├── .gitignore
 └── README.md
+
 ```
 
 ## 사전 요구사항
@@ -145,13 +146,22 @@ terraform output internal_alb_dns
 terraform output rds_endpoint
 ```
 
-### 2. SSH 키 경로 설정
+### 2. SSH 키 경로 설정 및 SSH Agent Forwarding 사용 (로컬 SSH 키를 Web EC2 Instance에서 사용할 수 있게 설정)
 
 `ansible/ansible.cfg`에서 SSH 키 경로 수정:
 
 ```ini
 private_key_file = ~/.ssh/your-key.pem
 ```
+
+- SSH Agent 시작 (이미 실행 중이면 생략)
+`eval $(ssh-agent)`
+
+- 키 추가
+`ssh-add ~/.ssh/your-key.pem`
+
+- 등록 확인
+`ssh-add -l`
 
 ### 3. 연결 테스트
 
