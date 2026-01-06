@@ -129,6 +129,13 @@ terraform output web_public_ips
 
 Terraform output을 기반으로 `ansible/inventory/aws_hosts.ini` 수정:
 
+`WEB_A_PUBLIC_IP`,
+`WEB_C_PUBLIC_IP`,
+`APP_A_PRIVATE_IP`,
+`APP_C_PRIVATE_IP`,
+`INTERNAL_ALB_DNS`,
+`RDS_ENDPOINT`
+
 ```bash
 # Terraform 출력 확인
 cd terraform
