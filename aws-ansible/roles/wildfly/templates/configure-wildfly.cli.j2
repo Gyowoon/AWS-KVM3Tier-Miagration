@@ -1,0 +1,45 @@
+#===============================================================================
+# roles/wildfly/templates/configure-wildfly.cli.j2
+#===============================================================================
+# 역할: WildFly CLI를 통한 PostgreSQL 데이터소스 설정
+# 실행: jboss-cli.sh --connect --file=configure-wildfly.cli
+#===============================================================================
+
+# 배치 모드 시작
+batch
+
+#---------------------------------------
+# PostgreSQL JDBC 드라이버 등록
+#---------------------------------------
+# 드라이버가 이미 존재하면 오류 발생 → 무시됨
+/subsystem=datasources/jdbc-driver=postgresql:add( \
+    driver-name=postgresql, \
+    driver-module-name=org.postgresql, \
+    driver-class-name=org.postgresql.Driver, \
+    driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource \
+)
+
+#---------------------------------------
+# PostgreSQL 데이터소스 생성
+#---------------------------------------
+# 기존 데이터소스 제거 (있으면)
+# /subsystem=datasources/data-source={{ datasource_name }}:remove()
+
+# 새 데이터소스 추가
+/subsystem=datasources/data-source={{ datasource_name }}:add( \
+    jndi-name="{{ datasource_jndi }}", \
+    driver-name=postgresql, \
+    connection-url="jdbc:postgresql://{{ db_host }}:{{ db_port }}/{{ db_name }}", \
+    user-name="{{ db_user }}", \
+    password="{{ db_password | default('changeme') }}", \
+    min-pool-size={{ datasource_pool_min }}, \
+    max-pool-size={{ datasource_pool_max }}, \
+    enabled=true, \
+    use-java-context=true, \
+    validate-on-match=true, \
+    valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker, \
+    exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter \
+)
+
+# 배치 실행
+run-batch

@@ -1,0 +1,38 @@
+#===============================================================================
+# playbooks/web.yml - Web Tier Playbook
+#===============================================================================
+# 역할: Web 서버만 구성 (Nginx)
+# 사용법: ansible-playbook playbooks/web.yml
+#===============================================================================
+
+---
+- name: Configure Web Tier (Nginx)
+  hosts: web
+  become: true
+  
+  roles:
+    - common
+    - nginx
+  
+  #---------------------------------------
+  # 구성 완료 후 검증
+  #---------------------------------------
+  post_tasks:
+    - name: Check Nginx is running
+      ansible.builtin.service_facts:
+
+    - name: Display Nginx status
+      ansible.builtin.debug:
+        msg: "Nginx is {{ ansible_facts.services['nginx.service'].state }}"
+      when: "'nginx.service' in ansible_facts.services"
+
+    - name: Test Nginx health endpoint
+      ansible.builtin.uri:
+        url: http://localhost/health
+        status_code: 200
+      register: health_check
+      ignore_errors: true
+
+    - name: Display health check result
+      ansible.builtin.debug:
+        msg: "Health check: {{ 'PASS' if health_check.status == 200 else 'FAIL' }}"

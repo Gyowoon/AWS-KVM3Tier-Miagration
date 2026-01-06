@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+===============================================================================
+roles/wildfly/templates/postgresql-module.xml.j2
+===============================================================================
+역할: WildFly PostgreSQL JDBC 드라이버 모듈 정의
+===============================================================================
+-->
+<module xmlns="urn:jboss:module:1.5" name="org.postgresql">
+    <resources>
+        <resource-root path="postgresql.jar"/>
+    </resources>
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.transaction.api"/>
+    </dependencies>
+</module>

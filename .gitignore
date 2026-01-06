@@ -1,0 +1,89 @@
+#===============================================================================
+# .gitignore - Git 제외 파일
+#===============================================================================
+
+#---------------------------------------
+# Terraform
+#---------------------------------------
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which are likely to contain sensitive data
+# 민감 정보 포함 (DB 비밀번호, IP 주소 등)
+*.tfvars
+*.tfvars.json
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# Lock file (필요시 포함 가능)
+# .terraform.lock.hcl
+
+#---------------------------------------
+# Ansible
+#---------------------------------------
+# Retry files
+*.retry
+
+# Vault password files
+.vault_pass
+vault_password_file
+
+# Inventory with sensitive data
+# inventory/hosts (직접 생성한 경우)
+
+#---------------------------------------
+# SSH Keys
+#---------------------------------------
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+#---------------------------------------
+# OS Generated
+#---------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+#---------------------------------------
+# IDE
+#---------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+#---------------------------------------
+# Environment Files
+#---------------------------------------
+.env
+.env.local
+*.env
+
+#---------------------------------------
+# Logs
+#---------------------------------------
+*.log
+logs/

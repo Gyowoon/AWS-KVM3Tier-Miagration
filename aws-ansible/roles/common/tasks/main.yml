@@ -1,0 +1,38 @@
+#===============================================================================
+# roles/common/tasks/main.yml - 공통 작업
+#===============================================================================
+# 역할: 모든 서버에 적용되는 기본 설정
+# 적용 대상: Web, App 전체
+#===============================================================================
+
+---
+#---------------------------------------
+# 타임존 설정
+#---------------------------------------
+- name: Set timezone to Asia/Seoul
+  community.general.timezone:
+    name: "{{ timezone }}"
+  tags: timezone
+
+#---------------------------------------
+# 공통 패키지 설치
+#---------------------------------------
+- name: Install common packages
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+  tags: packages
+
+#---------------------------------------
+# SELinux 상태 확인
+#---------------------------------------
+- name: Get SELinux status
+  ansible.builtin.command: getenforce
+  register: selinux_status
+  changed_when: false
+  tags: selinux
+
+- name: Display SELinux status
+  ansible.builtin.debug:
+    msg: "SELinux is {{ selinux_status.stdout }}"
+  tags: selinux

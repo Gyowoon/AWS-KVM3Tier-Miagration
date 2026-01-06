@@ -1,0 +1,38 @@
+#===============================================================================
+# roles/wildfly/templates/wildfly.service.j2
+#===============================================================================
+# 역할: WildFly systemd 서비스 정의
+#===============================================================================
+
+[Unit]
+Description=WildFly Application Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ wildfly_user }}
+Group={{ wildfly_group }}
+
+# 환경 변수
+Environment="JAVA_HOME={{ java_home }}"
+Environment="JBOSS_HOME={{ wildfly_home }}"
+Environment="JAVA_OPTS={{ wildfly_java_opts }}"
+
+# 실행 스크립트
+ExecStart={{ wildfly_home }}/bin/launch.sh
+
+# 종료
+ExecStop={{ wildfly_home }}/bin/jboss-cli.sh --connect command=:shutdown
+TimeoutStopSec=30
+
+# 재시작 정책
+Restart=on-failure
+RestartSec=10
+
+# 로그
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wildfly
+
+[Install]
+WantedBy=multi-user.target

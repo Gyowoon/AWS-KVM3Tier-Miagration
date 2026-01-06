@@ -1,0 +1,53 @@
+#===============================================================================
+# group_vars/app.yml - App Tier 변수
+#===============================================================================
+# 역할: App 서버(WildFly) 관련 변수 정의
+# Phase 1 참조: WildFly 31 + Java 17
+#===============================================================================
+
+---
+#---------------------------------------
+# Java 설정
+#---------------------------------------
+java_package: java-17-openjdk-devel
+java_home: /usr/lib/jvm/java-17-openjdk
+
+#---------------------------------------
+# WildFly 설정
+#---------------------------------------
+wildfly_version: "31.0.1.Final"
+wildfly_download_url: "https://github.com/wildfly/wildfly/releases/download/{{ wildfly_version }}/wildfly-{{ wildfly_version }}.tar.gz"
+
+# 설치 경로
+wildfly_install_dir: /opt
+wildfly_home: "{{ wildfly_install_dir }}/wildfly"
+
+# 실행 사용자
+wildfly_user: wildfly
+wildfly_group: wildfly
+
+# 바인딩 설정
+wildfly_bind_address: 0.0.0.0
+wildfly_management_bind_address: 127.0.0.1
+wildfly_http_port: 8080
+wildfly_https_port: 8443
+wildfly_management_port: 9990
+
+#---------------------------------------
+# PostgreSQL JDBC 드라이버
+#---------------------------------------
+postgresql_jdbc_version: "42.7.4"
+postgresql_jdbc_url: "https://jdbc.postgresql.org/download/postgresql-{{ postgresql_jdbc_version }}.jar"
+
+#---------------------------------------
+# 데이터소스 설정
+#---------------------------------------
+datasource_name: PostgresDS
+datasource_jndi: java:jboss/datasources/PostgresDS
+datasource_pool_min: 5
+datasource_pool_max: 20
+
+#---------------------------------------
+# JVM 옵션 (t3.micro용 최적화)
+#---------------------------------------
+wildfly_java_opts: "-Xms256m -Xmx512m -XX:MetaspaceSize=128m"

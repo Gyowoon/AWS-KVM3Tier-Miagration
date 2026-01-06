@@ -1,0 +1,17 @@
+#!/bin/bash
+#===============================================================================
+# roles/wildfly/templates/launch.sh.j2
+#===============================================================================
+# 역할: WildFly 실행 스크립트 (systemd에서 호출)
+#===============================================================================
+
+# WildFly standalone 모드 실행
+# -b: 모든 인터페이스에서 바인딩 (외부 접근 허용)
+# -bmanagement: 관리 인터페이스 바인딩 (localhost만)
+
+exec {{ wildfly_home }}/bin/standalone.sh \
+    -b {{ wildfly_bind_address }} \
+    -bmanagement {{ wildfly_management_bind_address }} \
+    -Djboss.http.port={{ wildfly_http_port }} \
+    -Djboss.https.port={{ wildfly_https_port }} \
+    -Djboss.management.http.port={{ wildfly_management_port }}

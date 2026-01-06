@@ -1,0 +1,219 @@
+#===============================================================================
+# roles/wildfly/tasks/main.yml - WildFly 설치 및 설정
+#===============================================================================
+# 역할: WildFly 애플리케이션 서버 설치 및 PostgreSQL 연결 설정
+# Phase 1 참조:
+#   - WildFly 31 + Java 17
+#   - 경로: /opt/wildfly
+#   - RDS PostgreSQL 연결
+#===============================================================================
+
+---
+#---------------------------------------
+# Java 설치
+#---------------------------------------
+- name: Install Java 17
+  ansible.builtin.dnf:
+    name: "{{ java_package }}"
+    state: present
+  tags:
+    - wildfly
+    - java
+
+- name: Verify Java installation
+  ansible.builtin.command:
+    cmd: java -version
+  register: java_version
+  changed_when: false
+  tags: java
+
+- name: Display Java version
+  ansible.builtin.debug:
+    msg: "{{ java_version.stderr_lines }}"
+  tags: java
+
+#---------------------------------------
+# WildFly 사용자 생성
+#---------------------------------------
+- name: Create WildFly group
+  ansible.builtin.group:
+    name: "{{ wildfly_group }}"
+    state: present
+  tags: wildfly
+
+- name: Create WildFly user
+  ansible.builtin.user:
+    name: "{{ wildfly_user }}"
+    group: "{{ wildfly_group }}"
+    home: "{{ wildfly_home }}"
+    shell: /sbin/nologin
+    system: true
+    create_home: false
+  tags: wildfly
+
+#---------------------------------------
+# WildFly 다운로드 및 설치
+#---------------------------------------
+- name: Check if WildFly is already installed
+  ansible.builtin.stat:
+    path: "{{ wildfly_home }}/bin/standalone.sh"
+  register: wildfly_installed
+  tags: wildfly
+
+- name: Download WildFly
+  ansible.builtin.get_url:
+    url: "{{ wildfly_download_url }}"
+    dest: "/tmp/wildfly-{{ wildfly_version }}.tar.gz"
+    mode: '0644'
+  when: not wildfly_installed.stat.exists
+  tags: wildfly
+
+- name: Extract WildFly
+  ansible.builtin.unarchive:
+    src: "/tmp/wildfly-{{ wildfly_version }}.tar.gz"
+    dest: "{{ wildfly_install_dir }}"
+    remote_src: true
+    creates: "{{ wildfly_install_dir }}/wildfly-{{ wildfly_version }}"
+  when: not wildfly_installed.stat.exists
+  tags: wildfly
+
+- name: Create symlink to WildFly
+  ansible.builtin.file:
+    src: "{{ wildfly_install_dir }}/wildfly-{{ wildfly_version }}"
+    dest: "{{ wildfly_home }}"
+    state: link
+    force: true
+  tags: wildfly
+
+- name: Set WildFly directory ownership
+  ansible.builtin.file:
+    path: "{{ wildfly_install_dir }}/wildfly-{{ wildfly_version }}"
+    owner: "{{ wildfly_user }}"
+    group: "{{ wildfly_group }}"
+    recurse: true
+  tags: wildfly
+
+#---------------------------------------
+# PostgreSQL JDBC 드라이버 설치
+#---------------------------------------
+- name: Create WildFly modules directory for PostgreSQL
+  ansible.builtin.file:
+    path: "{{ wildfly_home }}/modules/org/postgresql/main"
+    state: directory
+    owner: "{{ wildfly_user }}"
+    group: "{{ wildfly_group }}"
+    mode: '0755'
+  tags:
+    - wildfly
+    - jdbc
+
+- name: Download PostgreSQL JDBC driver
+  ansible.builtin.get_url:
+    url: "{{ postgresql_jdbc_url }}"
+    dest: "{{ wildfly_home }}/modules/org/postgresql/main/postgresql.jar"
+    owner: "{{ wildfly_user }}"
+    group: "{{ wildfly_group }}"
+    mode: '0644'
+  tags:
+    - wildfly
+    - jdbc
+
+- name: Create PostgreSQL module.xml
+  ansible.builtin.template:
+    src: postgresql-module.xml.j2
+    dest: "{{ wildfly_home }}/modules/org/postgresql/main/module.xml"
+    owner: "{{ wildfly_user }}"
+    group: "{{ wildfly_group }}"
+    mode: '0644'
+  tags:
+    - wildfly
+    - jdbc
+
+#---------------------------------------
+# WildFly 설정
+#---------------------------------------
+- name: Deploy WildFly configuration script
+  ansible.builtin.template:
+    src: configure-wildfly.cli.j2
+    dest: "/tmp/configure-wildfly.cli"
+    mode: '0644'
+  tags: wildfly
+
+#---------------------------------------
+# Systemd 서비스 설정
+#---------------------------------------
+- name: Deploy WildFly systemd service
+  ansible.builtin.template:
+    src: wildfly.service.j2
+    dest: /etc/systemd/system/wildfly.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd
+  tags: wildfly
+
+- name: Deploy WildFly launch script
+  ansible.builtin.template:
+    src: launch.sh.j2
+    dest: "{{ wildfly_home }}/bin/launch.sh"
+    owner: "{{ wildfly_user }}"
+    group: "{{ wildfly_group }}"
+    mode: '0755'
+  tags: wildfly
+
+#---------------------------------------
+# WildFly 시작
+#---------------------------------------
+- name: Start and enable WildFly
+  ansible.builtin.systemd:
+    name: wildfly
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags: wildfly
+
+#---------------------------------------
+# WildFly CLI로 설정 적용
+#---------------------------------------
+- name: Wait for WildFly to start
+  ansible.builtin.wait_for:
+    port: "{{ wildfly_http_port }}"
+    delay: 10
+    timeout: 120
+  tags: wildfly
+
+- name: Apply WildFly configuration via CLI
+  ansible.builtin.command:
+    cmd: "{{ wildfly_home }}/bin/jboss-cli.sh --connect --file=/tmp/configure-wildfly.cli"
+  register: cli_result
+  changed_when: "'outcome' in cli_result.stdout"
+  failed_when: false  # CLI 오류는 무시 (이미 설정된 경우)
+  tags: wildfly
+
+- name: Display CLI result
+  ansible.builtin.debug:
+    msg: "{{ cli_result.stdout_lines | default(['No output']) }}"
+  when: cli_result.stdout is defined
+  tags: wildfly
+
+#---------------------------------------
+# 서비스 재시작 (설정 적용)
+#---------------------------------------
+- name: Restart WildFly to apply configuration
+  ansible.builtin.systemd:
+    name: wildfly
+    state: restarted
+  tags: wildfly
+
+#---------------------------------------
+# 최종 상태 확인
+#---------------------------------------
+- name: Verify WildFly is running
+  ansible.builtin.uri:
+    url: "http://localhost:{{ wildfly_http_port }}/"
+    status_code: [200, 404]  # WildFly 기본 페이지 또는 404 허용
+  register: wildfly_check
+  retries: 5
+  delay: 10
+  until: wildfly_check.status in [200, 404]
+  tags: wildfly

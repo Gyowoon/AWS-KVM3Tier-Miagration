@@ -1,0 +1,44 @@
+#===============================================================================
+# group_vars/all.yml - 전체 공통 변수
+#===============================================================================
+# 역할: 모든 호스트에 적용되는 변수 정의
+#===============================================================================
+
+---
+#---------------------------------------
+# 프로젝트 정보
+#---------------------------------------
+project_name: portfolio
+environment: dev
+
+#---------------------------------------
+# 시스템 설정
+#---------------------------------------
+# 타임존
+timezone: Asia/Seoul
+
+# SELinux 설정 (Rocky Linux 기본 활성화)
+selinux_state: enforcing
+
+#---------------------------------------
+# 공통 패키지
+#---------------------------------------
+common_packages:
+  - vim
+  - wget
+  - curl
+  - tar
+  - unzip
+  - net-tools
+  - bind-utils    # nslookup, dig
+  - policycoreutils-python-utils  # SELinux 관리
+
+#---------------------------------------
+# RDS 연결 정보
+#---------------------------------------
+# 실제 값은 inventory 또는 실행 시 --extra-vars로 전달
+db_host: "{{ rds_endpoint | default('localhost') }}"
+db_port: "{{ rds_port | default(5432) }}"
+db_name: "{{ rds_database | default('myappdb') }}"
+db_user: "{{ rds_username | default('postgres') }}"
+# db_password는 vault 또는 --extra-vars로 전달

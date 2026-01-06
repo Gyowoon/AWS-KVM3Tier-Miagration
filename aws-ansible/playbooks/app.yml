@@ -1,0 +1,38 @@
+#===============================================================================
+# playbooks/app.yml - App Tier Playbook
+#===============================================================================
+# 역할: App 서버만 구성 (WildFly + PostgreSQL)
+# 사용법: ansible-playbook playbooks/app.yml -e "db_password=YourPassword"
+#===============================================================================
+
+---
+- name: Configure App Tier (WildFly)
+  hosts: app
+  become: true
+  
+  roles:
+    - common
+    - wildfly
+  
+  #---------------------------------------
+  # 구성 완료 후 검증
+  #---------------------------------------
+  post_tasks:
+    - name: Check WildFly is running
+      ansible.builtin.service_facts:
+
+    - name: Display WildFly status
+      ansible.builtin.debug:
+        msg: "WildFly is {{ ansible_facts.services['wildfly.service'].state }}"
+      when: "'wildfly.service' in ansible_facts.services"
+
+    - name: Test WildFly HTTP port
+      ansible.builtin.wait_for:
+        port: "{{ wildfly_http_port }}"
+        timeout: 10
+      register: port_check
+      ignore_errors: true
+
+    - name: Display port check result
+      ansible.builtin.debug:
+        msg: "Port {{ wildfly_http_port }} check: {{ 'OPEN' if port_check is success else 'CLOSED' }}"
