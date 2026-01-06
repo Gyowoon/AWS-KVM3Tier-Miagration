@@ -175,7 +175,7 @@ ansible app -m ping
 
 ```bash
 # 전체 실행 (Web + App)
-ansible-playbook playbooks/site.yml -e "db_password=YourDBPassword"
+ansible-playbook site.yml -e "db_password=YourDBPassword"
 
 # Web만 실행
 ansible-playbook playbooks/web.yml
